@@ -1,0 +1,63 @@
+# Use HTMX + Alpine.js for the Kairos Factory Web UI
+
+## Status
+
+Accepted
+
+## Context
+
+This decision applies to the **Kairos Factory** web UI project, and potentially also the **Kairos Web Installer** in the future.
+
+Both projects rely on a lightweight Go backend and aim to offer a browser-based UI for building or installing Kairos OS images. The frontend should remain minimal, easy to maintain, and not require a full JavaScript build system or SPA framework.
+
+Key functional requirements:
+- A dynamic form: selecting certain options reveals or hides other fields.
+- Backend-driven validation, especially for YAML documents.
+- Real-time log streaming from the backend via WebSockets.
+- A few UI elements (e.g., progress bars, status messages) must update based on backend state.
+
+Team constraints:
+- The team is **spread thin**, and we don’t currently have anyone heavily experienced in full fledged frontend frameworks like React or Vue.
+- We also don’t have any **heavy web applications** on the roadmap — our frontend needs are limited in scope and complexity.
+
+## Decision
+
+This proposal recommends using:
+
+- **[HTMX](https://htmx.org/)** to manage server-driven interactivity, such as:
+  - Submitting forms via AJAX
+  - Conditionally loading parts of the form
+  - Updating specific elements based on backend responses
+
+- **[Alpine.js](https://alpinejs.dev/)** to manage small client-side state and interactivity, such as:
+  - Showing/hiding fields based on user selection
+  - Reacting to WebSocket events (e.g. updating logs or statuses)
+  - Triggering UI transitions or minor animations
+
+This combination allows us to:
+
+- Build dynamic interfaces using plain HTML with no frontend build step
+- Keep the backend in control of business logic and rendering
+- React to live backend events without needing a full SPA framework
+
+This also aligns well with our broader architecture:
+
+- The stack pairs naturally with our **small Go backends**, using Go’s native HTML templating and HTTP server
+- The result is a **self-contained, lightweight container** that fits cleanly into our **Kubernetes-native deployments**
+- Avoids extra complexity from adding Node-based toolchains or splitting frontend/backend layers unnecessarily
+
+## Alternatives Considered
+
+- **HTMX only**: Doesn’t provide client-side state or logic needed for interactive elements or reacting to WebSocket messages.
+- **React / Vue / Svelte**: These frameworks offer full client-side interactivity but require bundling, introduce significant complexity, and are harder to integrate into a simple Go backend with HTML templates. Also, none of us are experts in them.
+- **Lit**: Powerful for Web Components, but heavier than we need here and still requires a build step and more JavaScript logic.
+
+## Consequences
+
+- We keep the frontend very lightweight and close to the metal (HTML + minimal JS).
+- We avoid unnecessary tooling and complexity during development and deployment.
+- The app remains **composable, easy to containerize**, and **well-suited for Kubernetes environments**.
+- The choice fits our current **team capacity and skills** — we’re not overcommitting to tech we’re not equipped to maintain.
+- If needs change in the future, we still retain flexibility to replace or upgrade parts of the UI gradually.
+
+HTMX + Alpine provide a good balance between simplicity, power, and long-term maintainability for the scope of this project.
